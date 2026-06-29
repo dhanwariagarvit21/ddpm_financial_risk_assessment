@@ -32,7 +32,7 @@ def noisify(T, x0, alphas_bar):
     eps   = torch.randn_like(x0)
     a_bar = alphas_bar[t].unsqueeze(1)
     xt    = torch.sqrt(a_bar) * x0 + torch.sqrt(1 - a_bar) * eps
-    return xt, t, eps
+    return xt, t, x0
 
 def split_context(context, MARKET_DIM=25):
     return context[:, :MARKET_DIM], context[:, MARKET_DIM:]

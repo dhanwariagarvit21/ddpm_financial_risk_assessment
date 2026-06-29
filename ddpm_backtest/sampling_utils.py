@@ -57,18 +57,19 @@ def _reverse_diffusion(model, xt, c_cond, market_cont, time_feats,
             alpha_t     = alphas_t[t].unsqueeze(0).unsqueeze(1)
             beta_t      = betas_t[t].unsqueeze(0).unsqueeze(1)
             alpha_bar_t = alphas_bar[t].unsqueeze(0).unsqueeze(1)
-            sqrt_a      = torch.sqrt(alpha_t)
-            sqrt_1m_ab  = torch.sqrt(1.0 - alpha_bar_t).clamp(min=1e-5)
-
-            eps_u = model(xt, c_cond, market_cont, time_feats, tf, drop_mask=d_all)
-            eps_c = model(xt, c_cond, market_cont, time_feats, tf, drop_mask=d_none)
-            eps   = (eps_u + guidance_scale * (eps_c - eps_u)).clamp(-3.0, 3.0)
-            mean  = (xt - (beta_t / sqrt_1m_ab) * eps) / sqrt_a
+            alpha_bar_prev = alphas_bar[t - 1].unsqueeze(0).unsqueeze(1) if t > 0 \
+                             else torch.ones_like(alpha_bar_t)
+            x0_u = model(xt, c_cond, market_cont, time_feats, tf, drop_mask=d_all)
+            x0_c = model(xt, c_cond, market_cont, time_feats, tf, drop_mask=d_none)
+            x0_pred = (x0_u + guidance_scale * (x0_c - x0_u)).clamp(-3.0, 3.0)
+            coef1 = (torch.sqrt(alpha_bar_prev) * beta_t) / (1.0 - alpha_bar_t)
+            coef2 = (torch.sqrt(alpha_t) * (1.0 - alpha_bar_prev)) / (1.0 - alpha_bar_t)
+            mean  = coef1 * x0_pred + coef2 * xt
 
             if t > 0:
                 xt = mean + temperature * torch.sqrt(beta_t) * torch.randn_like(xt)
             else:
-                xt = mean
+                xt = mean   
 
     return xt
 

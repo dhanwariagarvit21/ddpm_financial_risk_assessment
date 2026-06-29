@@ -12,6 +12,7 @@ import torch
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
+from tqdm import tqdm 
 from arch import arch_model
 
 # %% ../nbs/data_loaders.ipynb 3
@@ -99,22 +100,23 @@ def compute_regime_score(df):
 def fit_garch_volatility(risk_df):
     n_total   = len(risk_df)
     train_end = int(0.80 * n_total)
-
-    train_returns_pct = risk_df["target_return"].iloc[:train_end] * 100
-    print("Fitting GARCH(1,1) on training data...")
-    garch_spec = arch_model(y=train_returns_pct, mean="Constant", vol="Garch",
-                            p=1, q=1, dist="Normal")
-    garch_fit  = garch_spec.fit(disp="off")
-    print(garch_fit.summary())
-
-    all_returns_pct = risk_df["target_return"] * 100
-    garch_full      = arch_model(y=all_returns_pct, mean="Constant", vol="Garch",
-                                p=1, q=1, dist="Normal")
-    garch_fixed     = garch_full.fix(garch_fit.params)
-    cond_vol_pct    = garch_fixed.conditional_volatility
-
-    risk_df["garch_vol"]   = (cond_vol_pct / 100.0).shift(1)
-    risk_df["garch_vol"]   = risk_df["garch_vol"].fillna(risk_df["realized_vol"] / np.sqrt(252))
+    risk_df["garch_vol"]   = np.nan
+    risk_df["garch_resid"] = np.nan
+    initial_window_size = 500 
+    forecast_horizon    = 1   
+    returns_pct = risk_df["target_return"] * 100
+    for i in tqdm(range(initial_window_size, len(returns_pct) - forecast_horizon + 1), desc="Rolling GARCH"):
+        current_window_data = returns_pct.iloc[i - initial_window_size : i]
+        garch_spec = arch_model(y=current_window_data, mean="Constant", vol="Garch", p=1, o=1, q=1, dist="Normal")
+        try:
+            garch_fit = garch_spec.fit(disp="off")
+        except Exception as e:
+            risk_df.loc[risk_df.index[i], "garch_vol"] = risk_df["realized_vol"].iloc[i-1] / np.sqrt(252)
+            continue
+        forecast    = garch_fit.forecast(horizon=forecast_horizon, reindex=False)
+        next_day_vol = np.sqrt(forecast.variance.iloc[0, 0]) / 100.0
+        risk_df.loc[risk_df.index[i], "garch_vol"] = next_day_vol
+    risk_df["garch_vol"] = risk_df["garch_vol"].fillna(risk_df["realized_vol"] / np.sqrt(252))
     risk_df["garch_resid"] = (risk_df["target_return"] / risk_df["garch_vol"]).clip(-10, 10)
     return risk_df
 
