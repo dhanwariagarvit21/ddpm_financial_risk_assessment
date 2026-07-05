@@ -294,6 +294,13 @@ To test my model's performance i used some external tests aswell
 3. dq test - this is the industry standard test for independence of violations this test tests for temporal autocorrelation more than the christoffersen test
 ---
 ## Results
+
+christoffersen and kupeic test:
+          <img width="554" height="366" alt="xnot christoffersen_kupeic" src="https://github.com/user-attachments/assets/ec03c635-e38c-47ca-8f2e-98fbf06e039f" />
+
+dq test:
+          <img width="845" height="427" alt="xnot dqtest" src="https://github.com/user-attachments/assets/c40334d8-30a2-4107-bb51-f1313684bc35" />
+
 ---
 
 ## Dependencies
