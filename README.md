@@ -274,11 +274,10 @@ calibration.
 
 | Metric | Target | Actual | Breaches | p-value | Status |
 |---|---|---|---|---|---|
-| VaR 95% | 5.000% | 5.913% | 23 / 389 | 0.4138 | PASS |
-| VaR 99% | 1.000% | 1.799% | 7 / 389 | 0.1185 | PASS |
+| VaR 95% | 5.000% | 6.464% | 17 / 263 | 0.2575 | PASS |
+| VaR 99% | 1.000% | 0.760% | 2 / 263 | 1.000 | PASS |
 
-VaR99/VaR95 ratio: 1.78 (training residual ratio: 1.78 — exact match,
-confirming the quantile map is correctly calibrated).
+VaR99/VaR95 ratio: 1.7609 (confirming the quantile map is correctly calibrated).
 <img width="694" height="396" alt="final_plots" src="https://github.com/user-attachments/assets/7b01c173-04d9-4c18-864b-5fdbf4143374" />
 <img width="1162" height="428" alt="no clamp Garch -ddpm predictive VaR Backtest" src="https://github.com/user-attachments/assets/46223d18-1ef3-4d42-a933-362473fb676f" />
 The PIT histogram is approximately uniform across [0, 1], confirming
@@ -286,11 +285,19 @@ the model is well-calibrated across the full return distribution, not
 just at the tail quantiles tested by Kupiec.
 
 ---
+## Tests
+To test my model's performance i used some external tests aswell
+1. Kupeic - this test wether the  unber of violation match the expected count of the confidence level
+2. christoffersen - this test bhilds upon kupeic and further tests that the violations are independent
+3. dq test - this is the industry standard test for independence of violations this test tests for temporal autocorrelation more than the christoffersen test
+---
+## Results
+---
 
 ## Dependencies
 
 ```
-torch >= 1.10
+torch >= 1.1
 yfinance
 pandas
 numpy
