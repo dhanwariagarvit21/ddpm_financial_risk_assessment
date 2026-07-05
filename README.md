@@ -90,7 +90,7 @@ Input: [xt (noisy residual), regime_label, timestep_embedding]
                    (128)         (128)         (128)         (1)
                     │
                     ▼
-         Output: predicted noise ε̂
+         Output: predicted data
 ```
 
 **FiLM conditioning** (Feature-wise Linear Modulation) applies
